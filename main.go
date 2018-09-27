@@ -1,3 +1,5 @@
+// This code is taken from https://github.com/Fullscreen/iam-authorized-keys-command
+// Its responsibility is to query iam service for users that match criteria, and list them with ssh public keys
 package main
 
 import (
@@ -69,7 +71,10 @@ func main() {
 						SSHPublicKeyId: k.SSHPublicKeyId,
 						UserName:       userName,
 					}
-					resp, _ := svc.GetSSHPublicKey(params)
+					resp, err := svc.GetSSHPublicKey(params)
+					if err != nil {
+						fmt.Fprintln(os.Stderr, err.Error())
+					}
 					fmt.Printf("# %s\n", *userName)
 					fmt.Println(*resp.SSHPublicKey.SSHPublicKeyBody)
 				}
@@ -85,12 +90,13 @@ func users(svc *iam.IAM, iamGroup string) ([]*iam.User, error) {
 	if iamGroup != "" {
 		params := &iam.GetGroupInput{
 			GroupName: aws.String(iamGroup),
+			MaxItems:  aws.Int64(1000),
 		}
 		resp, err := svc.GetGroup(params)
 		return resp.Users, err
 	}
 	params := &iam.ListUsersInput{
-		MaxItems: aws.Int64(100),
+		MaxItems: aws.Int64(1000),
 	}
 	resp, err := svc.ListUsers(params)
 	return resp.Users, err
