@@ -78,6 +78,8 @@ func main() {
 					fmt.Printf("# %s\n", *userName)
 					fmt.Println(*resp.SSHPublicKey.SSHPublicKeyBody)
 				}
+			} else {
+				fmt.Fprintln(os.Stderr, err.Error())
 			}
 			wg.Done()
 		}(u.UserName)
