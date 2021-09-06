@@ -2,7 +2,7 @@ project_name: iam-authorized-keys
 release:
   github:
     owner: hierynomus
-    name: iam-authorized-keys
+    name: iam-authorized-keys-command
   name_template: '{{.Tag}}'
 before:
   hooks:
