@@ -1,0 +1,24 @@
+project_name: iam-authorized-keys
+release:
+  github:
+    owner: hierynomus
+    name: iam-authorized-keys
+  name_template: '{{.Tag}}'
+before:
+  hooks:
+  - go mod tidy
+  - go mod download
+builds:
+- env:
+  - CGO_ENABLED=0
+  - GO111MODULE=on
+checksum:
+  name_template: checksums.txt
+snapshot:
+  name_template: "{{ .Tag }}-next"
+changelog:
+  sort: asc
+  filters:
+    exclude:
+    - "^docs:"
+    - "^test:"
