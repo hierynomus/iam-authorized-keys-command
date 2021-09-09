@@ -74,11 +74,14 @@ var (
 )
 
 func main() {
+	ctx := context.Background()
 	zerolog.SetGlobalLevel(zerolog.ErrorLevel)
+	l := log.Output(os.Stderr)
+	ctx = l.WithContext(ctx)
 	cmd.Flags().StringVarP(&cfg.IAMGroup, "iam-group", "i", "", "Get SSH keys from this IAM group")
 	cmd.Flags().StringVarP(&cfg.AWSProfile, "aws-profile", "p", "", "Connect to the specified AWS profile")
 	cmd.Flags().CountVarP(&verbosity, "verbose", "v", "Print more verbose logging")
-	cmd.ExecuteContext(context.Background())
+	cmd.ExecuteContext(ctx)
 }
 
 // The main function of the Root command
@@ -96,10 +99,9 @@ func FetchIAMUsers(cmd *cobra.Command, args []string) error {
 	errCh := make(chan error)
 	doneCh := make(chan bool)
 
-	ct := log.Logger.WithContext(cmd.Context())
-
+	ctx := cmd.Context()
 	f := &IAMKeyFetcher{
-		ctx:    ct,
+		ctx:    ctx,
 		config: cfg,
 		wg:     &sync.WaitGroup{},
 		userCh: userCh,
@@ -116,7 +118,7 @@ func FetchIAMUsers(cmd *cobra.Command, args []string) error {
 		case _ = <-c:
 			os.Exit(exitCodeOk)
 		case err := <-errCh:
-			fmt.Errorf("Error: %w", err)
+			log.Ctx(ctx).Error().Err(err).Msg("Error occurred")
 			os.Exit(exitCodeError)
 		case userKey := <-userCh:
 			fmt.Print(userKey)
