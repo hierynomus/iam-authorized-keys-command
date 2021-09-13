@@ -26,8 +26,9 @@ type Config struct {
 }
 
 type UserKey struct {
-	Username string
-	PubKey   string
+	Username    string
+	PubKey      string
+	Fingerprint string
 }
 
 type IAMKeyFetcher struct {
@@ -212,37 +213,6 @@ func (ikf *IAMKeyFetcher) getIAMClient(ctx context.Context) (*iam.Client, error)
 	return svc, nil
 }
 
-// fetchPubKey fetches the public key for the user specified
-// func (ikf *IAMKeyFetcher) fetchPubKey(ctx context.Context, iamClient *iam.Client, userName string) {
-// 	defer ikf.wg.Done()
-// 	log.Ctx(ctx).Debug().Str("username", userName).Msg("Fetching user")
-// 	user, err := iamClient.GetUserRequest(&iam.GetUserInput{
-// 		UserName: aws.String(userName),
-// 	}).Send(ctx)
-// 	if err != nil {
-// 		log.Ctx(ctx).Error().Err(err).Str("username", userName).Msg("Failed to fetch user")
-// 		ikf.errCh <- err
-// 		return
-// 	}
-
-// 	log.Ctx(ctx).Debug().Str("username", userName).Msg("Fetched user")
-
-// 	if user.User.UserName == nil {
-// 		log.Ctx(ctx).Error().Str("username", userName).Msg("User has no username")
-// 		return
-// 	}
-
-// 	if user.User.Arn == nil {
-// 		log.Ctx(ctx).Error().Str("username", userName).Msg("User has no ARN")
-// 		return
-// 	}
-
-// 	log.Ctx(ctx).Debug().Str("username", userName).Msg("Fetching keys")
-// 	keys, err := iamClient.ListAccessKeysRequest(&iam.ListAccessKeysInput{
-// 		UserName: user.User.UserName,
-// 	}).Send(ctx)
-// 	if err != nil {
-// 		log.Ctx(ctx).Error().
 func (ikf *IAMKeyFetcher) fetchPubKey(ctx context.Context, svc *iam.Client, user types.User) {
 	params := &iam.ListSSHPublicKeysInput{
 		UserName: user.UserName,
@@ -268,8 +238,9 @@ func (ikf *IAMKeyFetcher) fetchPubKey(ctx context.Context, svc *iam.Client, user
 			}
 
 			ikf.userCh <- &UserKey{
-				Username: *user.UserName,
-				PubKey:   *resp.SSHPublicKey.Fingerprint,
+				Username:    *user.UserName,
+				PubKey:      *resp.SSHPublicKey.SSHPublicKeyBody,
+				Fingerprint: *resp.SSHPublicKey.Fingerprint,
 			}
 		}
 	} else {
